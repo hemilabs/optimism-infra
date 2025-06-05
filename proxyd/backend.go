@@ -6,6 +6,8 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
+	"github.com/goccy/go-json"
+	"github.com/valyala/fasthttp"
 	"io"
 	"math"
 	"math/rand"
@@ -15,9 +17,6 @@ import (
 	"strings"
 	"sync"
 	"time"
-
-	"github.com/goccy/go-json"
-	"github.com/valyala/fasthttp"
 
 	sw "github.com/ethereum-optimism/infra/proxyd/pkg/avg-sliding-window"
 	"github.com/ethereum/go-ethereum/common"
@@ -719,11 +718,9 @@ func (b *Backend) IsHealthy() bool {
 	errorRate := b.ErrorRate()
 	avgLatency := time.Duration(b.latencySlidingWindow.Avg())
 	if errorRate >= b.maxErrorRateThreshold {
-		log.Warn("backend errorRate above maxErrorRateThreshold", "backend", b.Name, "errorRate", errorRate, "maxErrorRateThreshold", b.maxErrorRateThreshold)
 		return false
 	}
 	if avgLatency >= b.maxLatencyThreshold {
-		log.Warn("backend avgLatency above maxLatencyThreshold", "backend", b.Name, "avgLatency", avgLatency, "maxLatencyThreshold", b.maxLatencyThreshold)
 		return false
 	}
 	return true
