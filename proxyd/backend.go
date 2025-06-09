@@ -610,7 +610,7 @@ func (b *Backend) doForward(ctx context.Context, rpcReqs []*RPCReq, isBatch bool
 	defer func() {
 		fasthttp.ReleaseRequest(req)
 		fasthttp.ReleaseResponse(httpRes)
-	}
+	}()
 
 	err := b.fastClient.DoTimeout(req, httpRes, reqTimeout)
 	if err != nil {
@@ -618,7 +618,7 @@ func (b *Backend) doForward(ctx context.Context, rpcReqs []*RPCReq, isBatch bool
 		RecordBackendNetworkErrorRateSlidingWindow(b, b.ErrorRate())
 		return nil, wrapErr(err, "err in backend request")
 	}
-	
+
 	metricLabelMethod := rpcReqs[0].Method
 	if isBatch {
 		metricLabelMethod = "<batch>"
