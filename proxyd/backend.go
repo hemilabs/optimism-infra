@@ -6,8 +6,6 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
-	"github.com/goccy/go-json"
-	"github.com/valyala/fasthttp"
 	"io"
 	"math"
 	"math/rand"
@@ -17,6 +15,9 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/goccy/go-json"
+	"github.com/valyala/fasthttp"
 
 	sw "github.com/ethereum-optimism/infra/proxyd/pkg/avg-sliding-window"
 	"github.com/ethereum/go-ethereum/common"
@@ -606,15 +607,18 @@ func (b *Backend) doForward(ctx context.Context, rpcReqs []*RPCReq, isBatch bool
 
 	reqTimeout := time.Duration(5000) * time.Millisecond
 
+	defer func() {
+		fasthttp.ReleaseRequest(req)
+		fasthttp.ReleaseResponse(httpRes)
+	}
+
 	err := b.fastClient.DoTimeout(req, httpRes, reqTimeout)
 	if err != nil {
 		b.intermittentErrorsSlidingWindow.Incr()
 		RecordBackendNetworkErrorRateSlidingWindow(b, b.ErrorRate())
 		return nil, wrapErr(err, "err in backend request")
 	}
-	fasthttp.ReleaseRequest(req)
-	defer fasthttp.ReleaseResponse(httpRes)
-
+	
 	metricLabelMethod := rpcReqs[0].Method
 	if isBatch {
 		metricLabelMethod = "<batch>"
